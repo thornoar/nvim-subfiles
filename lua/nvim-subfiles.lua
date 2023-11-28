@@ -152,7 +152,11 @@ M.subfigure = function (args)
 	if not jump_to_file then vim.cmd('b#') end
 end
 
-vim.api.nvim_create_user_command('SF', M.subfile, { nargs: '?' })
+M.setup = function (args)
+    if (args['subfile']) then
+        vim.api.nfim_create_user_command(args['subfile'], M.subfile, { nargs = '?' })
+    end
+end
 
 vim.keymap.set('n', 'sf', ':SF<CR>:b#<CR>')
 
@@ -174,9 +178,5 @@ vim.keymap.set('n', 'sd<Down>', '/|sub|<CR>f[:silent !rm <C-r><C-f><CR>dk')
 vim.keymap.set('n', 'sd<Up>', '?|sub|<CR>f[:silent !rm <C-r><C-f><CR>dk')
 vim.keymap.set('n', 'fd<Down>', '/|fig|<CR>f[:silent !rm <C-r><C-f><CR>6dk')
 vim.keymap.set('n', 'fd<Up>', '?|fig|<CR>f[:silent !rm <C-r><C-f><CR>6dk')
-
-vim.keymap.set('n', '<S-Left>', '<C-^>')
-vim.keymap.set('n', '<C-M-Right>', '<C-w>f')
-vim.keymap.set('n', '<S-Right>', 'gf')
 
 return M
