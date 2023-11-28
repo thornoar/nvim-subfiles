@@ -77,7 +77,7 @@ M.subfile = function (args)
 	vim.fn.append(vim.fn.line('.'), '')
 	vim.cmd('silent write')
 	if not jump_to_file then vim.cmd('b#') end
-end, { nargs = '?' })
+end
 
 M.subfigure = function (args)
 	local rargs = M.parse_cmd_args(args['args'], '/')
@@ -150,7 +150,7 @@ M.subfigure = function (args)
 	end
 	vim.cmd('silent write')
 	if not jump_to_file then vim.cmd('b#') end
-end)
+end
 
 vim.api.nvim_create_user_command('SF', M.subfile, { nargs: '?' })
 
