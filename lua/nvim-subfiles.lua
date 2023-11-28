@@ -152,31 +152,29 @@ M.subfigure = function (args)
 	if not jump_to_file then vim.cmd('b#') end
 end
 
-M.setup = function (args)
-    if (args['subfile']) then
-        vim.api.nfim_create_user_command(args['subfile'], M.subfile, { nargs = '?' })
-    end
+M.setup = function ()
+    vim.api.nvim_create_user_command('SF', M.subfile, { nargs = '?' })
+    vim.api.nvim_create_user_command('SP', M.subfigure, { nargs = '?' })
+    vim.keymap.set('n', 'sf', ':SF<CR>:b#<CR>')
+
+    vim.keymap.set('n', 's<Left>', 'gg0f[gf')
+    vim.keymap.set('n', 's<Down>', '/|sub|<CR>f[gf')
+    vim.keymap.set('n', 's<Up>', '?|sub|<CR>f[gf')
+    vim.keymap.set('n', 'S<Left>', 'gg0f[<C-w>f')
+    vim.keymap.set('n', 'S<Down>', '/|sub|<CR>f[<C-w>f')
+    vim.keymap.set('n', 'S<Up>', '?|sub|<CR>f[<C-w>f')
+
+    vim.keymap.set('n', 'f<Left>', '?|return|<CR>f[gf')
+    vim.keymap.set('n', 'f<Down>', '/|fig|<CR>f[gf')
+    vim.keymap.set('n', 'f<Up>', '?|fig|<CR>f[gf')
+    vim.keymap.set('n', 'F<Left>', '?|return|<CR>f[<C-w>f')
+    vim.keymap.set('n', 'F<Down>', '/|fig|<CR>f[<C-w>f')
+    vim.keymap.set('n', 'F<Up>', '?|fig|<CR>f[<C-w>f')
+
+    vim.keymap.set('n', 'sd<Down>', '/|sub|<CR>f[:silent !rm <C-r><C-f><CR>dk')
+    vim.keymap.set('n', 'sd<Up>', '?|sub|<CR>f[:silent !rm <C-r><C-f><CR>dk')
+    vim.keymap.set('n', 'fd<Down>', '/|fig|<CR>f[:silent !rm <C-r><C-f><CR>6dk')
+    vim.keymap.set('n', 'fd<Up>', '?|fig|<CR>f[:silent !rm <C-r><C-f><CR>6dk')
 end
-
-vim.keymap.set('n', 'sf', ':SF<CR>:b#<CR>')
-
-vim.keymap.set('n', 's<Left>', 'gg0f[gf')
-vim.keymap.set('n', 's<Down>', '/|sub|<CR>f[gf')
-vim.keymap.set('n', 's<Up>', '?|sub|<CR>f[gf')
-vim.keymap.set('n', 'S<Left>', 'gg0f[<C-w>f')
-vim.keymap.set('n', 'S<Down>', '/|sub|<CR>f[<C-w>f')
-vim.keymap.set('n', 'S<Up>', '?|sub|<CR>f[<C-w>f')
-
-vim.keymap.set('n', 'f<Left>', '?|return|<CR>f[gf')
-vim.keymap.set('n', 'f<Down>', '/|fig|<CR>f[gf')
-vim.keymap.set('n', 'f<Up>', '?|fig|<CR>f[gf')
-vim.keymap.set('n', 'F<Left>', '?|return|<CR>f[<C-w>f')
-vim.keymap.set('n', 'F<Down>', '/|fig|<CR>f[<C-w>f')
-vim.keymap.set('n', 'F<Up>', '?|fig|<CR>f[<C-w>f')
-
-vim.keymap.set('n', 'sd<Down>', '/|sub|<CR>f[:silent !rm <C-r><C-f><CR>dk')
-vim.keymap.set('n', 'sd<Up>', '?|sub|<CR>f[:silent !rm <C-r><C-f><CR>dk')
-vim.keymap.set('n', 'fd<Down>', '/|fig|<CR>f[:silent !rm <C-r><C-f><CR>6dk')
-vim.keymap.set('n', 'fd<Up>', '?|fig|<CR>f[:silent !rm <C-r><C-f><CR>6dk')
 
 return M
