@@ -89,11 +89,11 @@ M.subfigure = function (args)
 	end
 	local ftin = rargs['3'] or default_in_format
 	local ftout = rargs['4'] or default_out_format
-	local opts = rargs['5'] or ''
-	local width_in = rargs['6'] or default_width_in
-	local height_in = rargs['7'] or default_height_in
-	local mar = rargs['8']
-	local desc = rargs['9'] or ''
+	local desc = rargs['5'] or ''
+	local opts = rargs['6'] or ''
+	local width_in = rargs['7'] or default_width_in
+	local height_in = rargs['8'] or default_height_in
+	local mar = rargs['9']
 	vim.fn.append(vim.fn.line('.')-1, '\\begin{figure}['..opts..']')
 	vim.fn.append(vim.fn.line('.')-1, '    \\centering')
 	vim.fn.append(vim.fn.line('.')-1, '    \\includegraphics{'..dir..name..'.'..ftout..'}')
@@ -153,6 +153,7 @@ M.subfigure = function (args)
 end
 
 M.setup = function (names)
+    print(names['subfigure'])
     vim.api.nvim_create_user_command(names['subfile'] or 'SF', M.subfile, { nargs = '?' })
     vim.api.nvim_create_user_command(names['subfigure'] or 'CF', M.subfigure, { nargs = '?' })
     vim.keymap.set('n', 'sf', ':SF<CR>:b#<CR>')
