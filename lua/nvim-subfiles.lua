@@ -33,41 +33,47 @@ M.parse_cmd_args = function (str, delim)
 	return t
 end
 
-
-M.subfile = function (args)
+M.create_subfile = function (args)
 	local rargs = M.parse_cmd_args(args['args'], '/')
 	local dir = (rargs['1'] or subfile_dir)..'/'
 	local name = rargs['2']
+    local ext = rargs['3'] or vim.expand('%:e')
 	if (not name) then
-		sub_file_count = sub_file_count + 1
-		name = 'sub-'..vim.fn.expand('%:r')..'-'..tostring(sub_file_count)
+        local subfilecount = 1
+        while io.open(dir..'sub-'..vim.expand('%:r')..'-'..tostring(subfilecount)..'.'..ext, 'r') ~= nil do
+            subfilecount = subfilecount + 1
+        end
+		name = 'sub-'..vim.fn.expand('%:r')..'-'..tostring(subfilecount)..'.'..ext
 	end
-	name = name..'.tex'
 	vim.fn.append(vim.fn.line('.')-1, '\\subfile{'..dir..name..'}')
 	vim.fn.append(vim.fn.line('.')-1, '%|sub|['..dir..name..']')
-	-- print (dir..name)
 	if vim.fn.filereadable(dir..name) == 1 then
 		vim.cmd('find '..dir..name)
 		return
 	end
 	local parent = nil
-	for i = 1,1,vim.fn.line('$') do
-		local line = vim.fn.getline(i);
-		if string.find(line, '\\documentclass') then
-			local class = line:match('%{.+%}')
-			if (class == '{subfiles}') then
-				local opts = line:match('%[.+%]')
-				if opts then
-					parent = opts:sub(2, #opts-1)
-				else
-					print('please specify path to main document in the preamble')
-					return
-				end
-			else
-				parent = (dir == './' and './' or '../')..vim.fn.expand('%:t')
-			end
-		end
-	end
+    if ext == 'tex' then
+        for i = 1,1,vim.fn.line('$') do
+            local line = vim.fn.getline(i);
+            if string.find(line, '\\documentclass') then
+                local class = line:match('%{.+%}')
+                if (class == '{subfiles}') then
+                    local opts = line:match('%[.+%]')
+                    if opts then
+                        parent = opts:sub(2, #opts-1)
+                    else
+                        print('please specify path to main document in the preamble')
+                        return
+                    end
+                else
+                    parent = (dir == './' and './' or '../')..vim.fn.expand('%:t')
+                end
+            end
+        end
+    else
+        parent = (dir == './' and './' or '../')..vim.fn.expand('%:t')
+    end
+
 	if vim.fn.isdirectory(dir) == 0 then os.execute('mkdir '..dir) end
 	vim.cmd('edit '..dir..name)
 	vim.fn.append(0, '')
@@ -80,7 +86,7 @@ M.subfile = function (args)
 	if not jump_to_file then vim.cmd('b#') end
 end
 
-M.subfigure = function (args)
+M.create_subfigure = function (args)
 	local rargs = M.parse_cmd_args(args['args'], '/')
 	local dir = (rargs['1'] or figure_dir)..'/'
 	local name = rargs['2']
@@ -99,7 +105,7 @@ M.subfigure = function (args)
 	vim.fn.append(vim.fn.line('.')-1, '    \\centering')
 	vim.fn.append(vim.fn.line('.')-1, '    \\includegraphics{'..dir..name..'.'..ftout..'}')
 	vim.fn.append(vim.fn.line('.')-1, '    \\caption{'..desc..'}')
-	vim.fn.append(vim.fn.line('.')-1, '    \\label{fig:'..dir..name..'}')
+	vim.fn.append(vim.fn.line('.')-1, '    \\label{fig:'..name..'}')
 	vim.fn.append(vim.fn.line('.')-1, '\\end{figure}')
 	vim.fn.append(vim.fn.line('.')-1, '%|fig|['..dir..name..'.'..ftin..']')
 	if vim.fn.filereadable(dir..name) == 1 then
