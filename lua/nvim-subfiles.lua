@@ -160,8 +160,8 @@ M.create_subfigure = function (args)
 end
 
 M.setup = function (names)
-    vim.api.nvim_create_user_command(names['subfile'] or 'SF', M.subfile, { nargs = '?' })
-    vim.api.nvim_create_user_command(names['subfigure'] or 'CF', M.subfigure, { nargs = '?' })
+    vim.api.nvim_create_user_command((names['subfile'] or 'SF'), M.create_subfile, { nargs = '?' })
+    vim.api.nvim_create_user_command((names['subfigure'] or 'F'), M.create_subfigure, { nargs = '?' })
     vim.keymap.set('n', 'sf', ':SF<CR>:b#<CR>')
 
     vim.keymap.set('n', 's<Left>', 'gg/|return|<CR>f[gf')
