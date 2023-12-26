@@ -37,7 +37,7 @@ M.create_subfile = function (args)
 	local rargs = M.parse_cmd_args(args['args'], '/')
 	local dir = (rargs['1'] or subfile_dir)..'/'
 	local name = rargs['2']
-    local ext = rargs['3'] or vim.expand('%:e')
+    local ext = rargs['3'] or vim.fn.expand('%:e')
 	if (not name) then
         local subfilecount = 1
         while io.open(dir..'sub-'..vim.expand('%:r')..'-'..tostring(subfilecount)..'.'..ext, 'r') ~= nil do
