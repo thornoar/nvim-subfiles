@@ -60,7 +60,7 @@ local write_to_main_file = function (lines)
 end
 
 -- The lines that are written in the main file (the import function call, etc.) when the create_subfile function is called.
-local subfile_import_lines = {
+local main_file_include_lines = {
     ['tex'] = function (dir, name)
         return {
             '\\subfile{'..dir..name..'.tex}',
@@ -74,10 +74,23 @@ local subfile_import_lines = {
         }
     end
 }
+local main_file_embed_lines = {
+    ['tex'] = function (dir, name, desc, opts, ftin, ftout)
+        return {
+            '\\begin{figure}['..opts..']',
+            '    \\centering',
+            '    \\includegraphics{'..dir..name..'.'..ftout..'}',
+            '    \\caption{'..desc..'}',
+            '    \\label{fig:'..name..'}',
+            '\\end{figure}',
+            '%|fig|['..dir..name..'.'..ftin..']',
+        }
+    end,
+}
 
 -- The lines that are pre-inserted in the subfile created.
 local subfile_file_contents = {
-    ['tex'] = function (parent)
+    ['tex'] = function (parent, opts)
         return {
             {
                 '\\documentclass['..parent..']{subfiles}',
@@ -97,80 +110,10 @@ local subfile_file_contents = {
             {
                 '//|return|['..parent..']',
                 '',
-            },
-            {}
-        }
-    end
-}
-
-local subfile_determine_parent = {
-    ['tex'] = function (dir)
-        for i = 1,1,vim.fn.line('$') do
-            local line = vim.fn.getline(i);
-            if string.find(line, '\\documentclass') then
-                local class = line:match('%{.+%}')
-                if (class == '{subfiles}') then
-                    local opts = line:match('%[.+%]')
-                    if opts then
-                        return opts:sub(2, #opts-1)
-                    else
-                        print('please specify path to main document in the preamble')
-                        return nil
-                    end
-                end
-            end
-        end
-        return (dir == '' and './' or '../')..vim.fn.expand('%:t')
-    end,
-    ['asy'] = function (dir)
-        return (dir == '' and './' or '../')..vim.fn.expand('%:t')
-    end,
-}
-
-M.create_subfile = function (args)
-	local rargs = parse_cmd_args(args['args'], '/')
-	local dir = rargs['1'] and (rargs['1']..'/') or subfile_dir
-	local name = rargs['2']
-    local ext = vim.fn.expand('%:e')
-	if (not name) then
-        local subfilecount = 1
-        local mainname = vim.expand('%:r')
-        while io.open(dir..'sub-'..mainname..'-'..tostring(subfilecount)..'.'..ext, 'r') ~= nil do
-            subfilecount = subfilecount + 1
-        end
-		name = 'sub-'..vim.fn.expand('%:r')..'-'..tostring(subfilecount)..'.'..ext
-	end
-    local fullpath = dir..name..'.'..ext
-
-    write_to_main_file(subfile_import_lines[ext](dir, name))
-
-	if vim.fn.filereadable(fullpath) == 1 then
-		vim.cmd('find '..fullpath)
-		return
-	end
-
-	local parent = subfile_determine_parent[ext](dir)
-    if not parent then return end
-
-	if (not (dir == '')) and vim.fn.isdirectory(dir) == 0 then os.execute('mkdir '..dir) end
-
-    write_to_subfile(fullpath, subfile_file_contents[ext](parent))
-end
-
-local figure_import_lines = {
-    ['tex'] = function (dir, name, desc, opts, ftin, ftout)
-        return {
-            '\\begin{figure}['..opts..']',
-            '    \\centering',
-            '    \\includegraphics{'..dir..name..'.'..ftout..'}',
-            '    \\caption{'..desc..'}',
-            '    \\label{fig:'..name..'}',
-            '\\end{figure}',
-            '%|fig|['..dir..name..'.'..ftin..']',
+            }
         }
     end,
 }
-
 local figure_file_contents = {
     ['asy'] = function (name, ftout, width_in, height_in)
         local curmar = mar or '1cm'
@@ -203,6 +146,72 @@ local figure_file_contents = {
     end,
 }
 
+local subfile_determine_parent = {
+    ['tex'] = function (dir)
+        for i = 1,1,vim.fn.line('$') do
+            local line = vim.fn.getline(i);
+            if string.find(line, '\\documentclass') then
+                local class = line:match('%{.+%}')
+                if (class == '{subfiles}') then
+                    local opts = line:match('%[.+%]')
+                    if opts then
+                        return opts:sub(2, #opts-1)
+                    else
+                        print('please specify path to main document in the preamble')
+                        return nil
+                    end
+                end
+            end
+        end
+        return (dir == '' and './' or '../')..vim.fn.expand('%:t')
+    end,
+    ['asy'] = function (dir)
+        return (dir == '' and './' or '../')..vim.fn.expand('%:t')
+    end,
+}
+
+M.create_subfile = function (args)
+	local rargs = parse_cmd_args(args['args'], '/')
+	local dir = rargs['1'] and (rargs['1']..'/') or subfile_dir
+	local name = rargs['2']
+    if not name then
+        print('please provide a name for the subfile')
+        return nil
+    end
+    local parent_ext = vim.fn.expand('%:e')
+    local ext = rargs['3'] or parent_ext
+    local subfile_type = rargs['4'] or (ext == parent_ext and 'i' or 'e')
+    local opts = rargs['5'] and parse_cmd_args(rargs['5'], ',') or ''
+
+    local fullpath = dir..name..'.'..ext
+
+    if subfile_type == 'i' then
+        local import_lines = main_file_include_lines[parent_ext]
+        if import_lines then write_to_main_file(import_lines(dir, name, opts)) else
+            print('no directions how to include subfile for file type \"'..parent_ext..'\", needs to be configured')
+            return nil
+        end
+    else
+        local import_lines = main_file_embed_lines[parent_ext]
+        if import_lines then write_to_main_file(import_lines(dir, name, ext, opts)) else
+            print('no directions how to embed subfile for file type \"'..parent_ext..'\", needs to be configured')
+            return nil
+        end
+    end
+
+	if vim.fn.filereadable(fullpath) == 1 then
+		vim.cmd('find '..fullpath)
+		return
+	end
+
+	local parent = subfile_determine_parent[parent_ext](dir)
+    if not parent then return nil end
+
+	if (not (dir == '')) and vim.fn.isdirectory(dir) == 0 then os.execute('mkdir '..dir) end
+
+    write_to_subfile(fullpath, subfile_file_contents[parent_ext](parent, opts))
+end
+
 M.create_subfigure = function (args)
 	local rargs = parse_cmd_args(args['args'], '/')
 	local dir = rargs['1'] and (rargs['1']..'/') or figure_dir
@@ -221,10 +230,11 @@ M.create_subfigure = function (args)
 	local width_in = rargs['7'] or default_width_in
 	local height_in = rargs['8'] or default_height_in
 	local mar = rargs['9']
+
     local ext = vim.fn.expand('%:e')
     local fullpath = dir..name..'.'..ftin
 
-    local import_lines = figure_import_lines[ext](dir, name, desc, opts, ftin, ftout)
+    local import_lines = main_file_embed_lines[ext](dir, name, desc, opts, ftin, ftout)
     if import_lines then write_to_main_file(import_lines) else return end
 
 	if vim.fn.filereadable(fullpath) == 1 then
