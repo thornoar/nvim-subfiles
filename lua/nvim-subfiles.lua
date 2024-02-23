@@ -66,6 +66,12 @@ local subfile_import_lines = {
             '\\subfile{'..dir..name..'.tex}',
             '%|sub|['..dir..name..'.tex]',
         }
+    end,
+    ['asy'] = function (dir, name)
+        return {
+            'include \"'..dir..name..'.asy\";',
+            '//|sub|['..dir..name..'.asy]',
+        }
     end
 }
 
@@ -84,6 +90,15 @@ local subfile_file_contents = {
                 '',
                 '\\end{document}',
             }
+        }
+    end,
+    ['asy'] = function (parent)
+        return {
+            {
+                '//|return|['..parent..']',
+                '',
+            },
+            {}
         }
     end
 }
