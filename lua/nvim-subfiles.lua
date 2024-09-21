@@ -48,13 +48,13 @@ local write_to_subfile = function (fullpath, lines)
     vim.cmd('edit '..fullpath)
     if lines[1] then
         local len = #lines[1]
-        for k,v in pairs(lines[1]) do
+        for k,_ in pairs(lines[1]) do
             vim.fn.append(0, lines[1][len-k+1])
         end
     end
     if lines[2] then
         local len = #lines[2]
-        for k,v in pairs(lines[2]) do
+        for k,_ in pairs(lines[2]) do
             vim.fn.append(vim.fn.line('.'), lines[2][len-k+1])
         end
     end
@@ -64,20 +64,20 @@ end
 
 -- Function to insert lines to the main file (import function calls, jump references, etc.).
 local write_to_main_file = function (lines)
-    for k,v in pairs(lines) do
+    for k,_ in pairs(lines) do
         vim.fn.append(vim.fn.line('.')-1, lines[k])
     end
 end
 
 -- The lines that are written in the main file (the import function call, etc.) when the create_subfile function is called.
 M.parent_include_lines = {
-    ['tex'] = function (dir, name, opts)
+    ['tex'] = function (dir, name, _)
         return {
             '\\include{'..dir..name..'.tex}',
             '%|sub|['..dir..name..'.tex]',
         }
     end,
-    ['asy'] = function (dir, name, opts)
+    ['asy'] = function (dir, name, _)
         return {
             'include \"'..dir..name..'.asy\";',
             '//|sub|['..dir..name..'.asy]',
@@ -118,7 +118,7 @@ M.included_file_contents = {
     end,
 }
 M.embedded_file_contents = {
-    ['asy'] = function (parent, name, ftout, opts)
+    ['asy'] = function (parent, _, ftout, opts)
         local curmar = opts.mar or '1cm'
         return {
             {
