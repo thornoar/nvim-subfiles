@@ -82,20 +82,37 @@ M.parent_include_lines = {
             'include \"'..dir..name..'.asy\";',
             '//|sub|['..dir..name..'.asy]',
         }
+    end,
+    ['typ'] = function (dir, name, _)
+        return {
+            '#include \"'..dir..name..'\"',
+            '//|sub|['..dir..name..'.asy]',
+        }
     end
 }
 M.parent_embed_lines = {
     ['tex'] = function (dir, name, ftin, ftout, opts)
         return {
-            '\\begin{figure}['..(opts.opts or '')..']',
+            '\\begin{figure}['..(opts['2'] or '')..']',
             '    \\centering',
             '    \\includegraphics{'..dir..name..'.'..ftout..'}',
-            '    \\caption{'..(opts.desc or '')..'}',
+            '    \\caption{'..(opts['1'] or '')..'}',
             '    \\label{fig:'..name..'}',
             '\\end{figure}',
             '%|sub|['..dir..name..'.'..ftin..']',
         }
     end,
+    ['typ'] = function (dir, name, ftin, ftout, opts)
+        return {
+            '#align(center)[',
+            '  #figure(',
+            '    image(\"'..dir..name..'.'..ftout..'\"),',
+            '    caption: \"' .. (opts['1'] or "caption") .. '\"',
+            '  ) <'..name..'>',
+            ']',
+            '//|sub|['..dir..name..'.'..ftin..']',
+        }
+    end
 }
 
 -- The lines that are pre-inserted in the subfile created.
@@ -116,29 +133,36 @@ M.included_file_contents = {
             }
         }
     end,
+    ['typ'] = function (parent)
+        return {
+            {
+                '//|return|['..parent..']',
+                '',
+            }
+        }
+    end,
 }
 M.embedded_file_contents = {
     ['asy'] = function (parent, _, ftout, opts)
-        local curmar = opts.mar or '1cm'
         return {
             {
-                'size(x = '..(opts.width_in or M.options.default_width_in)..' inches, y = '..(opts.height_in or M.options.default_height_in)..' inches);',
+                'size(x = '..(opts['3'] or M.options.default_width_in)..' inches, y = '..(opts['4'] or M.options.default_height_in)..' inches);',
                 'settings.outformat = \''..ftout..'\';',
                 'import export;',
                 '//|return|['..parent..']',
                 '',
             },
-            {
+            opts['5'] and {
                 '',
-                'export(margin = '..curmar..');',
-            }
+                'export(margin = '..opts['5']..');',
+            } or {},
         }
     end,
     ['r'] = function (parent, name, ftout, opts)
-        local curmar = opts.mar or '2.5'
+        local curmar = opts['5'] or '2.5'
         return {
             {
-                ftout..'(\''..name..'.'..ftout..'\', width = '..(opts.width_in or M.options.default_width_in)..', height = '..(opts.height_in or M.options.default_height_in)..')',
+                ftout..'(\''..name..'.'..ftout..'\', width = '..(opts['3'] or M.options.default_width_in)..', height = '..(opts['4'] or M.options.default_height_in)..')',
                 'dlmargin <- '..curmar,
                 'urmargin <- 0.5',
                 'par(mar = c(dlmargin,dlmargin,urmargin,urmargin))',
