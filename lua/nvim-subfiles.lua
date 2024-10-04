@@ -193,6 +193,9 @@ M.subfile_determine_parent = {
         end
         return (dir == '' and './' or '../')..vim.fn.expand('%:t')
     end,
+    ['typ'] = function (dir)
+        return (dir == '' and './' or '../')..vim.fn.expand('%:t')
+    end,
     ['asy'] = function (dir)
         return (dir == '' and './' or '../')..vim.fn.expand('%:t')
     end,
